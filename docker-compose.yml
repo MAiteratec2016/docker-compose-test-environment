@@ -20,7 +20,7 @@ services:
       - product-details-database:mysql
     working_dir: /application
     volumes:
-      - ../product-details-repository:/application
+      - ../product-details-service:/application
       - ~/.m2:/root/.m2
     ports:
       - 8080
@@ -32,7 +32,7 @@ services:
       - product-prices-database:mysql
     working_dir: /application
     volumes:
-      - ../product-prices-repository:/application
+      - ../product-prices-service:/application
       - ~/.m2:/root/.m2
     ports:
       - 8080
@@ -41,11 +41,11 @@ services:
   product-offer-service:
     image: maven
     links:
-      - product-details-repository
-      - product-prices-repository
+      - product-details-service
+      - product-prices-service
     working_dir: /application
     volumes:
-      - ../offer-manager:/application
+      - ../product-offer-service:/application
       - ~/.m2:/root/.m2
     ports:
       - 8080
