@@ -2,6 +2,25 @@ version: '2'
 
 services:
 
+  neo4j:
+    image: neo4j
+    ports:
+      - "7474:7474"
+    environment:
+      - NEO4J_AUTH=none
+
+  elasticsearch:
+    image: elasticsearch
+    ports:
+      - 9200:9200
+
+  kibana:
+    image: kibana
+    links:
+      - elasticsearch
+    ports:
+      - 5601:5601
+
   product-details-database:
     image: mysql
     environment:
@@ -23,7 +42,7 @@ services:
       - ../product-details-service:/application
       - ~/.m2:/root/.m2
     ports:
-      - 8080
+      - 8081:8080
     command: sh -c 'sleep 10 && mvn spring-boot:run'
   
   product-prices-service:
@@ -35,7 +54,7 @@ services:
       - ../product-prices-service:/application
       - ~/.m2:/root/.m2
     ports:
-      - 8080
+      - 8082:8080
     command: sh -c 'sleep 10 && mvn spring-boot:run'
   
   product-offer-service:
@@ -48,5 +67,62 @@ services:
       - ../product-offer-service:/application
       - ~/.m2:/root/.m2
     ports:
-      - 8080
+      - 8083:8080
     command: sh -c 'sleep 15 && mvn spring-boot:run'
+
+  product-details-logstash:
+    build: ./logstash
+    links:
+      - elasticsearch
+    volumes_from:
+      - product-details-service
+    volumes:
+      - ./logstash.conf:/config-dir/logstash.conf
+    environment:
+      HOST_NAME: product-details-service
+    command: logstash -f /config-dir/logstash.conf
+
+  product-prices-logstash:
+    build: ./logstash
+    links:
+      - elasticsearch
+    volumes_from:
+      - product-prices-service
+    volumes:
+      - ./logstash.conf:/config-dir/logstash.conf
+    environment:
+      HOST_NAME: product-prices-service
+    command: logstash -f /config-dir/logstash.conf
+
+  product-offers-logstash:
+    build: ./logstash
+    links:
+      - elasticsearch
+    volumes_from:
+      - product-offer-service
+    volumes:
+      - ./logstash.conf:/config-dir/logstash.conf
+    environment:
+      HOST_NAME: product-offer-service
+    command: logstash -f /config-dir/logstash.conf
+
+  access-log-scanner:
+    image: maven
+    working_dir: /application
+    volumes:
+      - ../access-log-scanner:/application
+      - ~/.m2:/root/.m2
+    links:
+      - elasticsearch
+      - neo4j
+    command: sh -c 'sleep 20 && mvn spring-boot:run'
+
+  ansible-scanner:
+    image: maven
+    working_dir: /application
+    volumes:
+      - ../ansible-scanner:/application
+      - ~/.m2:/root/.m2
+    links:
+      - neo4j
+    command: mvn spring-boot:run
