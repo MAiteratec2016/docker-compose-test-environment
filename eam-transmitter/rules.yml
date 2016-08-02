@@ -1,0 +1,8 @@
+- name: blubb
+  query: match (a)-[:ACCESS]->(b)-[:FROM]->(c) return a,b,c
+  iteraplan:
+    - buildingBlock: InformationSystem
+      name: {{ a.name }}
+    - buildingBlock: InformationSystem
+      name: {{ c.v4 }}
+    - buildingBlock:

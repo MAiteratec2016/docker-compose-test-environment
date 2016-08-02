@@ -134,3 +134,15 @@ services:
     links:
       - neo4j
     command: mvn spring-boot:run
+
+  eam-transmitter:
+    image: maven
+    working_dir: /application
+    volumes:
+      - ../eam-transmitter:/application
+      - ~/.m2:/root/.m2
+    ports:
+      - 9000:8080
+    links:
+      - neo4j
+    command: mvn spring-boot:run
