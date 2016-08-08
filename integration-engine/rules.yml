@@ -1,2 +1,0 @@
-- name: match microservices by name
-  statement: "match (a:service) match (b:role) where a.name = b.name merge (a)-[:IS]-(b)"
