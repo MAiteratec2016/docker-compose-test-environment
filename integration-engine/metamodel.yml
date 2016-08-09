@@ -1,0 +1,4 @@
+- name: create all metamodel nodes
+  statement: |
+    MERGE (engine:integration_engine)
+    MERGE (engine)-[:SPECIFIES]->(:integration_node {name:'service'})

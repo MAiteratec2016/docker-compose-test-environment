@@ -1,0 +1,5 @@
+- name: match equal services by name
+  statement: |
+    MATCH (:integration_engine)-[:SPECIFIES]->(s:integration_node {name:'service'})
+    MATCH (a)-[:SPECIFIED_BY]->(s)<-[:SPECIFIED_BY]-(b) WHERE a <> b AND a.name = b.name
+    MERGE (a)-[:SAME_AS]-(b)

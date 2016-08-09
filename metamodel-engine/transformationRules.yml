@@ -1,0 +1,26 @@
+- name: define the starting point of the metamodel
+  statement: MERGE (:metamodel {name:'team-service-access'})
+
+- name: extract all teams
+  statement: |
+    MATCH (:scanner {name:'ansible-scanner'})<-[:FROM_SCANNER]-(:hosts)-[:HOSTS_AVAILABLE]->(host)
+    MATCH (metamodel:metamodel {name:'team-service-access'})
+    MERGE (metamodel)-[:DEFINES_TEAM]->(:team {name:host.name})
+
+- name: extract all services owned by teams
+  statement: |
+    MATCH (:scanner {name:'ansible-scanner'})<-[:FROM_SCANNER]-(:hosts)-[:HOSTS_AVAILABLE]->(host:host)<-[:DEPLOYED_ON]-(role:role)
+    MATCH (:metamodel {name:'team-service-access'})-[:DEFINES_TEAM]->(team:team {name:host.name})
+    MERGE (team)-[:OWNS_SERVICE]->(:service {name:role.name})
+
+- name: create relationships between services based on accesses
+  statement: |
+    MATCH (:scanner {name:'access-log-scanner'})<-[:FROM_SCANNER]-(:services)-[:SERVICES_AVAILABLE]-(from_service:service)
+    MATCH (:scanner {name:'access-log-scanner'})<-[:FROM_SCANNER]-(:services)-[:SERVICES_AVAILABLE]-(to_service:service)
+    MATCH (to_role:role)-[:SAME_AS]-(from_service)-[:ACCESS]->(accessinfo:accessinfo)-[:FROM]->(:ip)<-[:HAS_IP]-(to_service)-[:SAME_AS]-(from_role:role)
+    MATCH (accessinfo)-[requests:REQUESTS]->()
+    MATCH (metamodel:metamodel {name:'team-service-access'})-[:DEFINES_TEAM]->(:team)-[:OWNS_SERVICE]->(source:service {name:from_role.name})
+    MATCH (metamodel:metamodel {name:'team-service-access'})-[:DEFINES_TEAM]->(:team)-[:OWNS_SERVICE]->(destination:service {name:to_role.name})
+    WITH source, destination, sum(requests.count) as accesscount
+    MERGE (destination)-[access:ACCESS_FROM]->(source)
+    SET access.count=accesscount

@@ -126,23 +126,25 @@ services:
     image: maven
     working_dir: /application
     volumes:
-      - ../integration-engine:/application
+      - ../rules-engine:/application
       - ~/.m2:/root/.m2
-      - ./integration-engine/rules.yml:/application/rules.yml
+      - ./integration-engine/metamodel.yml:/enginedata/metamodel.yml
+      - ./integration-engine/integrationRules.yml:/enginedata/integrationRules.yml
     ports:
       - 8090:8080
     links:
       - neo4j
-    command: mvn spring-boot:run
+    command: mvn spring-boot:run -Drun.arguments="--engine.init_rules_file=/enginedata/metamodel.yml,--engine.rules_file=/enginedata/integrationRules.yml"
 
-  eam-transmitter:
+  metamodel-engine:
     image: maven
     working_dir: /application
     volumes:
-      - ../eam-transmitter:/application
+      - ../rules-engine:/application
       - ~/.m2:/root/.m2
+      - ./metamodel-engine/transformationRules.yml:/enginedata/transformationRules.yml
     ports:
       - 9000:8080
     links:
       - neo4j
-    command: mvn spring-boot:run
+    command: mvn spring-boot:run -Drun.arguments="--engine.rules_file=/enginedata/transformationRules.yml"
