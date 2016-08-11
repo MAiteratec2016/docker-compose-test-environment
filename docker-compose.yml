@@ -2,25 +2,6 @@ version: '2'
 
 services:
 
-  neo4j:
-    image: neo4j
-    ports:
-      - "7474:7474"
-    environment:
-      - NEO4J_AUTH=none
-
-  elasticsearch:
-    image: elasticsearch
-    ports:
-      - 9200:9200
-
-  kibana:
-    image: kibana
-    links:
-      - elasticsearch
-    ports:
-      - 5601:5601
-
   product-details-database:
     image: mysql
     environment:
@@ -69,6 +50,18 @@ services:
     ports:
       - 8083:8080
     command: mvn spring-boot:run
+
+  neo4j:
+    image: neo4j
+    ports:
+      - "7474:7474"
+    environment:
+      - NEO4J_AUTH=none
+
+  elasticsearch:
+    image: elasticsearch
+    ports:
+      - 9200:9200
 
   product-details-logstash:
     build: ./logstash
