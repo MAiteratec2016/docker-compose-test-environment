@@ -1,0 +1,53 @@
+- name: extract all teams
+  statement: |
+    MATCH (:scanner {name:'ansible-scanner'})<-[:FROM_SCANNER]-(:hosts)-[:HOSTS_AVAILABLE]->(host)
+    RETURN host
+  transmissions:
+    - table: Team
+      columns:
+        - name: PersistentName
+          value: "{{ host.name }}"
+        - name: Name
+          value: "{{ host.name }}"
+
+- name: extract all services owned by teams
+  statement: |
+    MATCH (:scanner {name:'ansible-scanner'})<-[:FROM_SCANNER]-(:hosts)-[:HOSTS_AVAILABLE]->(host:host)<-[:DEPLOYED_ON]-(role:role)
+    RETURN host,role
+  transmissions:
+    - table: Information System (IS)
+      columns:
+        - name: Name
+          value: "{{ role.name }}"
+        - name: Status (IS)
+          value: Current
+        - name: Team
+          value: "{{ host.name }}"
+
+- name: create relationships between services based on accesses
+  statement: |
+    MATCH (:scanner {name:'access-log-scanner'})<-[:FROM_SCANNER]-(:services)-[:SERVICES_AVAILABLE]-(from_service:service)
+    MATCH (:scanner {name:'access-log-scanner'})<-[:FROM_SCANNER]-(:services)-[:SERVICES_AVAILABLE]-(to_service:service)
+    MATCH (to_role:role)-[:SAME_AS]-(from_service)-[:ACCESS]->(accessinfo:accessinfo)-[:FROM]->(:ip)<-[:HAS_IP]-(to_service)-[:SAME_AS]-(from_role:role)
+    MATCH (accessinfo)-[requests:REQUESTS]->()
+    MATCH (metamodel:metamodel {name:'team-service-access'})-[:DEFINES_TEAM]->(:team)-[:OWNS_SERVICE]->(source:service {name:from_role.name})
+    MATCH (metamodel:metamodel {name:'team-service-access'})-[:DEFINES_TEAM]->(:team)-[:OWNS_SERVICE]->(destination:service {name:to_role.name})
+    WITH source, destination, sum(requests.count) as accesscount
+    RETURN source,destination
+  transmissions:
+    - table: Interface (IFc)
+      columns:
+        - name: Name
+          value: "[{{ destination.name }}{{ source.name }}]"
+        - name: Interface Direction
+          value: FIRST_TO_SECOND
+    - table: Information Flow (IFl)
+      columns:
+        - name: Assigned Interface
+          value: "[{{ destination.name }}{{ source.name }}]"
+        - name: Connected Information System 1
+          value: "{{ destination.name }}"
+        - name: Connected Information System 2
+          value: "{{ source.name }}"
+        - name: Direction
+          value: FIRST_TO_SECOND

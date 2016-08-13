@@ -129,15 +129,35 @@ services:
       - neo4j
     command: mvn spring-boot:run -Drun.arguments="--engine.init_rules_file=/enginedata/metamodel.yml,--engine.rules_file=/enginedata/integrationRules.yml"
 
-  metamodel-engine:
+  graph-transmitter:
     image: maven
     working_dir: /application
     volumes:
       - ../rules-engine:/application
       - ~/.m2:/root/.m2
-      - ./metamodel-engine/transformationRules.yml:/enginedata/transformationRules.yml
+      - ./graph-transmitter/transmissionRules.yml:/enginedata/transmissionRules.yml
     ports:
       - 9000:8080
     links:
       - neo4j
-    command: mvn spring-boot:run -Drun.arguments="--engine.rules_file=/enginedata/transformationRules.yml"
+    command: mvn spring-boot:run -Drun.arguments="--engine.rules_file=/enginedata/transmissionRules.yml"
+  
+  iteraplan:
+    image: ma2016/iteraplan-keyless
+    ports:
+      - 8070:8080
+  
+  iteraplan-transmitter:
+    image: maven
+    working_dir: /application
+    volumes:
+      - ../iteraplan-transmitter:/application
+      - ~/.m2:/root/.m2
+      - ./iteraplan-transmitter/transmissionRules.yml:/enginedata/transmissionRules.yml
+      - /tmp/iteratest:/tmp/iteratest
+    ports:
+      - 9001:8080
+    links:
+      - neo4j
+      - iteraplan
+    command: mvn spring-boot:run -Drun.arguments="--engine.rules_file=/enginedata/transmissionRules.yml"
