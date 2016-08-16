@@ -28,10 +28,8 @@
   statement: |
     MATCH (:scanner {name:'access-log-scanner'})<-[:FROM_SCANNER]-(:services)-[:SERVICES_AVAILABLE]-(from_service:service)
     MATCH (:scanner {name:'access-log-scanner'})<-[:FROM_SCANNER]-(:services)-[:SERVICES_AVAILABLE]-(to_service:service)
-    MATCH (to_role:role)-[:SAME_AS]-(from_service)-[:ACCESS]->(accessinfo:accessinfo)-[:FROM]->(:ip)<-[:HAS_IP]-(to_service)-[:SAME_AS]-(from_role:role)
+    MATCH (destination:role)-[:SAME_AS]-(from_service)-[:ACCESS]->(accessinfo:accessinfo)-[:FROM]->(:ip)<-[:HAS_IP]-(to_service)-[:SAME_AS]-(source:role)
     MATCH (accessinfo)-[requests:REQUESTS]->()
-    MATCH (metamodel:metamodel {name:'team-service-access'})-[:DEFINES_TEAM]->(:team)-[:OWNS_SERVICE]->(source:service {name:from_role.name})
-    MATCH (metamodel:metamodel {name:'team-service-access'})-[:DEFINES_TEAM]->(:team)-[:OWNS_SERVICE]->(destination:service {name:to_role.name})
     WITH source, destination, sum(requests.count) as accesscount
     RETURN source,destination
   transmissions:
@@ -41,6 +39,8 @@
           value: "[{{ destination.name }}{{ source.name }}]"
         - name: Interface Direction
           value: FIRST_TO_SECOND
+        - name: Description
+          value: access from
     - table: Information Flow (IFl)
       columns:
         - name: Assigned Interface
