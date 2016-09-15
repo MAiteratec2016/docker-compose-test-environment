@@ -109,11 +109,12 @@ services:
     volumes:
       - ../ansible-scanner:/application
       - ~/.m2:/root/.m2
+      - ./ansible-scanner/config.yml:/ansiblescanner/config.yml
     ports:
       - 8092:8080
     links:
       - neo4j
-    command: mvn spring-boot:run
+    command: mvn spring-boot:run -Drun.arguments="--scanner.config=/ansiblescanner/config.yml"
 
   integration-engine:
     image: maven

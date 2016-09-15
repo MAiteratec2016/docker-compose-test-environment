@@ -1,0 +1,5 @@
+---
+- repository: "https://github.com/MAiteratec2016/ansible-deployment.git"
+  branch: master
+  playbooks:
+    - playbooks/master/site.yml
