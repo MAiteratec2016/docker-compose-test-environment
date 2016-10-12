@@ -63,6 +63,13 @@ services:
     ports:
       - 9200:9200
 
+  kibana:
+    image: kibana
+    links:
+      - elasticsearch
+    ports:
+      - 5601:5601
+
   product-details-logstash:
     build: ./logstash
     links:
@@ -80,6 +87,7 @@ services:
       - product-prices-service
     environment:
       HOST_NAME: product-prices-service
+    command: logstash -f /config-dir/logstash.conf --debug
 
   product-offers-logstash:
     build: ./logstash
